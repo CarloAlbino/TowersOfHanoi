@@ -100,7 +100,7 @@ public class TowersOfHanoiText : MonoBehaviour {
     {
         if (moves.Count > 0)
         {
-            board.MoveDisc(GetDiscToMove(), FindTargetTower(), GetTowerLevel());
+            board.MoveDisc(GetDiscToMove(), FindTowerToMoveTo(), GetTowerLevel());
             currentState.Copy(boardState.Dequeue());
             print(moves.Dequeue());
         }
@@ -133,7 +133,7 @@ public class TowersOfHanoiText : MonoBehaviour {
             //state.towerC = towerC;
             boardState.Enqueue(state);
 
-            Debug.Log("Current State: " + currentState.towerA.Count);
+            //Debug.Log("Current State: " + currentState.towerA.Count);
 
             // Move the disk-1 disk that we left on the auxiliary onto target
             SolveHanoi(disk - 1, auxiliaryTower, targetTower, sourceTower);
@@ -152,23 +152,49 @@ public class TowersOfHanoiText : MonoBehaviour {
         return arrayDisplay;
     }
 
-    private ETower FindTargetTower()
+    private ETower FindTowerToMoveFrom()
     {
         BoardState nextState = new BoardState();
         nextState.Copy(boardState.Peek());
         Debug.Log("Next " + nextState.towerA.Count + " " + nextState.towerB.Count + " " + nextState.towerC.Count);
         Debug.Log("Current " + currentState.towerA.Count + " " + currentState.towerB.Count + " " + currentState.towerC.Count);
+        ETower sourceTower = ETower.Target;
+
+        if (nextState.towerA.Count < currentState.towerA.Count)
+        {
+            sourceTower = ETower.Source;
+        }
+        else if(nextState.towerB.Count < currentState.towerB.Count)
+        {
+            sourceTower = ETower.Auxiliary;
+        }
+        else if(nextState.towerC.Count < currentState.towerC.Count)
+        {
+            sourceTower = ETower.Target;
+        }
+        else
+        {
+            Debug.LogWarning("Logic errorm fix this!");
+        }
+
+        return sourceTower;
+    }
+
+    private ETower FindTowerToMoveTo()
+    {
+        BoardState nextState = new BoardState();
+        nextState.Copy(boardState.Peek());
         ETower nextTower = ETower.Target;
 
         if (nextState.towerA.Count > currentState.towerA.Count)
         {
             nextTower = ETower.Source;
         }
-        else if(nextState.towerB.Count > currentState.towerB.Count)
+        else if (nextState.towerB.Count > currentState.towerB.Count)
         {
             nextTower = ETower.Auxiliary;
         }
-        else if(nextState.towerC.Count > currentState.towerC.Count)
+        else if (nextState.towerC.Count > currentState.towerC.Count)
         {
             nextTower = ETower.Target;
         }
@@ -182,19 +208,19 @@ public class TowersOfHanoiText : MonoBehaviour {
 
     private int GetDiscToMove()
     {
-        switch(FindTargetTower())
+        switch(FindTowerToMoveFrom())
         {
             case ETower.Source:
-                if(allTowers.towerA.Count > 0)
-                    return allTowers.towerA.Peek();
+                if(currentState.towerA.Count > 0)
+                    return currentState.towerA.Peek();
                 break;
             case ETower.Auxiliary:
-                if (allTowers.towerB.Count > 0)
-                    return allTowers.towerB.Peek();
+                if (currentState.towerB.Count > 0)
+                    return currentState.towerB.Peek();
                 break;
             case ETower.Target:
-                if (allTowers.towerC.Count > 0)
-                    return allTowers.towerC.Peek();
+                if (currentState.towerC.Count > 0)
+                    return currentState.towerC.Peek();
                 break;
         }
         Debug.LogWarning("Cannot find a disc");
@@ -203,14 +229,14 @@ public class TowersOfHanoiText : MonoBehaviour {
 
     private int GetTowerLevel()
     {
-        switch (FindTargetTower())
+        switch (FindTowerToMoveTo())
         {
             case ETower.Source:
-                return allTowers.towerA.Count;
+                return currentState.towerA.Count;
             case ETower.Auxiliary:
-                return allTowers.towerB.Count;
+                return currentState.towerB.Count;
             case ETower.Target:
-                return allTowers.towerC.Count;
+                return currentState.towerC.Count;
         }
         Debug.LogWarning("Cannot find a tower");
         return 0;
