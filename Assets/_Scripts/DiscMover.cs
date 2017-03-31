@@ -30,19 +30,28 @@ public class DiscMover : MonoBehaviour {
     }
 
     // Used in regular play
-    public void MoveDisc(int disc, ETower target)
+    public void MoveDisc(int disc, ETower target, bool useHint = false)
     {
         if(disc > m_board.GetTopDiscSize(target) && m_board.IsTopDisc(disc))
         {
             // Allowed to move the disc
             MoveDisc(disc, target, m_board.GetTowerSize(target));
-            m_board.UpdateBoardState(disc, target);
+            m_board.UpdateBoardState(disc, target, useHint);
         }
         else
         {
             // Not allowed to move the disc
             Debug.LogWarning("Cannot move the disc there.");
         }
+    }
+
+    // Move disc based off of state
+    public void MoveDisc(BoardState state, bool useHint = false)
+    {
+        int discToMove = m_board.GetDiscToMove(state);
+        ETower target = m_board.FindTowerToMoveTo(state);
+
+        MoveDisc(discToMove, target, useHint);
     }
 
     // Used in automatic solve

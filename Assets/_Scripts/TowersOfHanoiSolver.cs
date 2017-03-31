@@ -7,38 +7,60 @@ using UnityEngine;
 // Stores the state of the board
 public struct BoardState
 {
-    public Stack<int> towerA;
-    public Stack<int> towerB;
-    public Stack<int> towerC;
+    public Stack<int>[] towers;
 
     // Copy the passed in state to this state
     public void Copy(BoardState other)
     {
-        towerA = new Stack<int>();
-        towerB = new Stack<int>();
-        towerC = new Stack<int>();
-
-        int[] arrayA = new int[other.towerA.Count];
-        arrayA = other.towerA.ToArray();
-        int[] arrayB = new int[other.towerB.Count];
-        arrayB = other.towerB.ToArray();
-        int[] arrayC = new int[other.towerC.Count];
-        arrayC = other.towerC.ToArray();
-
-        for(int i = 0; i < arrayA.Length; i++)
+        if(towers == null || towers.Length == 0)
         {
-            towerA.Push(arrayA[i]);
+            towers = new Stack<int>[other.towers.Length];
         }
 
-        for (int i = 0; i < arrayB.Length; i++)
+        for(int i = 0; i < 3; i++)
         {
-            towerB.Push(arrayB[i]);
+            towers[i] = new Stack<int>();
         }
 
-        for (int i = 0; i < arrayC.Length; i++)
+        int[][] arrays = new int[3][];
+        for (int i = 0; i < towers.Length; i++)
         {
-            towerC.Push(arrayC[i]);
+            arrays[i] = other.towers[i].ToArray();
         }
+
+        for(int j = 0; j < arrays.Length; j++)
+        {
+            for (int i = arrays[j].Length - 1; i > -1; i--)
+            {
+                towers[j].Push(arrays[j][i]);
+            }
+        }
+    }
+
+    public bool Equals(BoardState other)
+    {
+        for(int i = 0; i < towers.Length; i++)
+        {
+            if (towers[i].Count == other.towers[i].Count)
+            {
+                int[] tempArray = towers[i].ToArray();
+                int[] tempOtherArray = other.towers[i].ToArray();
+
+                for (int j = 0; j < tempArray.Length; j++)
+                {
+                    if (tempArray[j] != tempOtherArray[j])
+                    {
+                        return false;
+                    }
+                }
+            }
+            else
+            {
+                return false;
+            }
+        }
+
+        return true;
     }
 }
 
@@ -91,36 +113,41 @@ public class TowersOfHanoiSolver : MonoBehaviour {
     // Initialize game
     public void InitGame()
     {
+        m_tempSolveState.towers = new Stack<int>[3];
         // Use the temp solve state to solve the puzzle and save all the states:
         // Initialize the first tower
-        m_tempSolveState.towerA = new Stack<int>();
+        m_tempSolveState.towers[0] = new Stack<int>();
         for (int i = 0; i < NUM_OF_DISCS; i++)
         {
-            m_tempSolveState.towerA.Push(i);
+            m_tempSolveState.towers[0].Push(i);
         }
         // Initialize empty towers
-        m_tempSolveState.towerB = new Stack<int>();
-        m_tempSolveState.towerC = new Stack<int>();
+        m_tempSolveState.towers[1] = new Stack<int>();
+        m_tempSolveState.towers[2] = new Stack<int>();
 
         // Save the initial state of the puzzle in string form
         m_solutionMoves.Enqueue(("A - " +
-        StackString(m_tempSolveState.towerA) +
+        StackString(m_tempSolveState.towers[0]) +
         "B - " +
-        StackString(m_tempSolveState.towerB) +
+        StackString(m_tempSolveState.towers[1]) +
         "C - " +
-        StackString(m_tempSolveState.towerC)));
+        StackString(m_tempSolveState.towers[2])));
 
         // Add the initial board state to the queue
         BoardState state = new BoardState();
+        state.towers = new Stack<int>[3];
         state.Copy(m_tempSolveState);
         m_boardStates.Enqueue(state);
+
+        // Solve the board
+        SolveHanoi(m_tempSolveState.towers[0].Count, m_tempSolveState.towers[0], m_tempSolveState.towers[2], m_tempSolveState.towers[1]);
+
+        FindObjectOfType<HintSystem>().SetHintSystem(m_boardStates);
+
         //print(m_solutionMoves.Dequeue());
         // Set the current state of the board
         m_solutionMoves.Dequeue();
         m_currentState.Copy(m_boardStates.Dequeue());
-
-        // Solve the board
-        SolveHanoi(m_tempSolveState.towerA.Count, m_tempSolveState.towerA, m_tempSolveState.towerC, m_tempSolveState.towerB);
     }
 
     // Display next step
@@ -160,18 +187,18 @@ public class TowersOfHanoiSolver : MonoBehaviour {
 
             // Save progress as a string to solution queue
             m_solutionMoves.Enqueue(("A - " +
-            StackString(m_tempSolveState.towerA) +
+            StackString(m_tempSolveState.towers[0]) +
             "B - " +
-            StackString(m_tempSolveState.towerB) +
+            StackString(m_tempSolveState.towers[1]) +
             "C - " +
-            StackString(m_tempSolveState.towerC)));
+            StackString(m_tempSolveState.towers[2])));
 
             // Save progress as a BoardState
             BoardState state = new BoardState();
             state.Copy(m_tempSolveState);
             m_boardStates.Enqueue(state);
 
-            //Debug.Log("Current State: " + currentState.towerA.Count);
+            //Debug.Log("Current State: " + currentState.towers[0].Count);
 
             // Move the disk-1 disk that we left on the auxiliary onto target
             SolveHanoi(disc - 1, auxiliaryTower, targetTower, sourceTower);
@@ -203,15 +230,15 @@ public class TowersOfHanoiSolver : MonoBehaviour {
         ETower sourceTower = ETower.Target;
 
         // If a tower in the next state has fewer discs then the move come from that tower
-        if (nextState.towerA.Count < m_currentState.towerA.Count)
+        if (nextState.towers[0].Count < m_currentState.towers[0].Count)
         {
             sourceTower = ETower.Source;
         }
-        else if(nextState.towerB.Count < m_currentState.towerB.Count)
+        else if(nextState.towers[1].Count < m_currentState.towers[1].Count)
         {
             sourceTower = ETower.Auxiliary;
         }
-        else if(nextState.towerC.Count < m_currentState.towerC.Count)
+        else if(nextState.towers[2].Count < m_currentState.towers[2].Count)
         {
             sourceTower = ETower.Target;
         }
@@ -231,15 +258,15 @@ public class TowersOfHanoiSolver : MonoBehaviour {
         ETower nextTower = ETower.Target;
 
         // If a tower in the next state has more discs then that is the target tower
-        if (nextState.towerA.Count > m_currentState.towerA.Count)
+        if (nextState.towers[0].Count > m_currentState.towers[0].Count)
         {
             nextTower = ETower.Source;
         }
-        else if (nextState.towerB.Count > m_currentState.towerB.Count)
+        else if (nextState.towers[1].Count > m_currentState.towers[1].Count)
         {
             nextTower = ETower.Auxiliary;
         }
-        else if (nextState.towerC.Count > m_currentState.towerC.Count)
+        else if (nextState.towers[2].Count > m_currentState.towers[2].Count)
         {
             nextTower = ETower.Target;
         }
@@ -258,16 +285,16 @@ public class TowersOfHanoiSolver : MonoBehaviour {
         switch(FindTowerToMoveFrom())
         {
             case ETower.Source:
-                if(m_currentState.towerA.Count > 0)
-                    return m_currentState.towerA.Peek();
+                if(m_currentState.towers[0].Count > 0)
+                    return m_currentState.towers[0].Peek();
                 break;
             case ETower.Auxiliary:
-                if (m_currentState.towerB.Count > 0)
-                    return m_currentState.towerB.Peek();
+                if (m_currentState.towers[1].Count > 0)
+                    return m_currentState.towers[1].Peek();
                 break;
             case ETower.Target:
-                if (m_currentState.towerC.Count > 0)
-                    return m_currentState.towerC.Peek();
+                if (m_currentState.towers[2].Count > 0)
+                    return m_currentState.towers[2].Peek();
                 break;
         }
         Debug.LogWarning("Cannot find a disc");
@@ -281,11 +308,11 @@ public class TowersOfHanoiSolver : MonoBehaviour {
         switch (FindTowerToMoveTo())
         {
             case ETower.Source:
-                return m_currentState.towerA.Count;
+                return m_currentState.towers[0].Count;
             case ETower.Auxiliary:
-                return m_currentState.towerB.Count;
+                return m_currentState.towers[1].Count;
             case ETower.Target:
-                return m_currentState.towerC.Count;
+                return m_currentState.towers[2].Count;
         }
         Debug.LogWarning("Cannot find a tower");
         return 0;

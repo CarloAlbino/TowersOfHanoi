@@ -6,10 +6,12 @@ public class MoveSelector : MonoBehaviour {
 
     private int m_selectedDisc;
     private DiscMover m_discMover;
+    private HintSystem m_hintSystem;
 
     void Start()
     {
         m_discMover = FindObjectOfType<DiscMover>();
+        m_hintSystem = FindObjectOfType<HintSystem>();
     }
 
     void Update()
@@ -25,6 +27,10 @@ public class MoveSelector : MonoBehaviour {
         if (Input.GetKeyDown(KeyCode.Alpha3))
         {
             m_discMover.MoveDisc(m_selectedDisc, ETower.Target);
+        }
+        if (Input.GetKeyDown(KeyCode.H))
+        {
+            m_discMover.MoveDisc(m_hintSystem.GetHint(), true);
         }
     }
 
