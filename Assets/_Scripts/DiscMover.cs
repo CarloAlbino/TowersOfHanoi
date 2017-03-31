@@ -22,9 +22,33 @@ public class DiscMover : MonoBehaviour {
     [SerializeField]
     private bool m_instantMoves = true;
 
+    private Board m_board;
+
+    void Start()
+    {
+        m_board = FindObjectOfType<Board>();
+    }
+
+    // Used in regular play
+    public void MoveDisc(int disc, ETower target)
+    {
+        if(disc > m_board.GetTopDiscSize(target) && m_board.IsTopDisc(disc))
+        {
+            // Allowed to move the disc
+            MoveDisc(disc, target, m_board.GetTowerSize(target));
+            m_board.UpdateBoardState(disc, target);
+        }
+        else
+        {
+            // Not allowed to move the disc
+            Debug.LogWarning("Cannot move the disc there.");
+        }
+    }
+
+    // Used in automatic solve
     public void MoveDisc(int disc, ETower target, int level)
     {
-        Debug.Log(level);
+        //Debug.Log(level);
         Vector3 newPosition;
         if(m_instantMoves)
         {
