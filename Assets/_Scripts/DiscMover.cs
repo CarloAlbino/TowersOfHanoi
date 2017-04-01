@@ -22,11 +22,20 @@ public class DiscMover : MonoBehaviour {
     [SerializeField]
     private bool m_instantMoves = true;
 
+    private bool m_isMoving = false;
+    private Vector3[] m_movePositions = new Vector3[3];
+    private int m_movingDisc;
+    private int m_moveIndex = 0;
     private Board m_board;
 
     void Start()
     {
         m_board = FindObjectOfType<Board>();
+    }
+
+    void Update()
+    {
+        MoveTo();
     }
 
     // Used in regular play
@@ -59,13 +68,50 @@ public class DiscMover : MonoBehaviour {
     {
         //Debug.Log(level);
         Vector3 newPosition;
-        if(m_instantMoves)
-        {
-            newPosition = m_discs[disc].position;
-            newPosition.x = m_pegs[(int)target].position.x;
-            newPosition.y = m_discLevels[level].position.y;
 
+        newPosition = m_discs[disc].position;
+        newPosition.x = m_pegs[(int)target].position.x;
+        newPosition.y = m_discLevels[level].position.y;
+
+        if (m_instantMoves)
+        {
             m_discs[disc].position = newPosition;
+        }
+        else
+        {
+            m_movingDisc = disc;
+            Vector3 pos1 = m_discs[disc].position;
+            pos1.y = m_pegs[0].position.y;
+            m_movePositions[0] = pos1;
+            Vector3 pos2 = m_discs[disc].position;
+            pos2.x = m_pegs[(int)target].position.x;
+            pos2.y = m_pegs[(int)target].position.y;
+            m_movePositions[1] = pos2;
+            m_movePositions[2] = newPosition; 
+
+            m_isMoving = true;
+        }
+    }
+
+    public void MoveTo()
+    {
+        if(m_isMoving)
+        {
+            if (m_moveIndex < m_movePositions.Length)
+            {
+                Vector3 newPos = Vector3.Lerp(m_discs[m_movingDisc].position, m_movePositions[m_moveIndex], m_moveSpeed * Time.deltaTime);
+                m_discs[m_movingDisc].position = newPos;
+
+                if (Vector3.Distance(m_discs[m_movingDisc].position, m_movePositions[m_moveIndex]) < 0.01f)
+                {
+                    m_moveIndex++;
+                }
+            }
+            else
+            {
+                m_isMoving = false;
+                m_moveIndex = 0;
+            }
         }
     }
 
