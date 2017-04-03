@@ -12,39 +12,39 @@ public class Board : MonoBehaviour {
     {
         m_hints = FindObjectOfType<HintSystem>();
         // For testing
-        InitBoard(6);
+        //InitBoard(6, 3);
     }
 
-    public void InitBoard(int numOfDiscs)
+    public void InitBoard(int numOfDiscs, int numOfPegs)
     {
         m_numOfDiscs = numOfDiscs;
 
         m_currentBoardState = new BoardState();
-        m_currentBoardState.towers = new Stack<int>[3];
+        m_currentBoardState.towers = new Stack<int>[numOfPegs];
         m_currentBoardState.towers[0] = new Stack<int>();
         for (int i = 0; i < m_numOfDiscs; i++)
         {
             m_currentBoardState.towers[0].Push(i);
         }
-        m_currentBoardState.towers[1] = new Stack<int>();
-        m_currentBoardState.towers[2] = new Stack<int>();
+
+        for(int i = 1; i< m_currentBoardState.towers.Length; i++)
+        {
+            m_currentBoardState.towers[i] = new Stack<int>();
+        }
     }
 
     public void UpdateBoardState(int disc, ETower tower, bool useHint = false)
     {
         BoardState prevState = new BoardState();
         prevState.Copy(m_currentBoardState);
-        if(m_currentBoardState.towers[0].Contains(disc))
+
+        for(int i = 0; i < m_currentBoardState.towers.Length; i++)
         {
-            m_currentBoardState.towers[0].Pop();
-        }
-        else if(m_currentBoardState.towers[1].Contains(disc))
-        {
-            m_currentBoardState.towers[1].Pop();
-        }
-        else if(m_currentBoardState.towers[2].Contains(disc))
-        {
-            m_currentBoardState.towers[2].Pop();
+            if (m_currentBoardState.towers[i].Contains(disc))
+            {
+                m_currentBoardState.towers[i].Pop();
+                break;
+            }
         }
 
         switch (tower)
@@ -201,5 +201,17 @@ public class Board : MonoBehaviour {
         }
         Debug.LogWarning("Cannot find a disc");
         return 0;
+    }
+
+    public bool DidWin(BoardState finalState)
+    {
+        if(m_currentBoardState.Equals(finalState))
+        {
+            return true;
+        }
+        else
+        {
+            return false;
+        }
     }
 }

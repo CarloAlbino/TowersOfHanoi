@@ -39,28 +39,35 @@ public struct BoardState
 
     public bool Equals(BoardState other)
     {
-        for(int i = 0; i < towers.Length; i++)
+        if (towers != null)
         {
-            if (towers[i].Count == other.towers[i].Count)
+            for (int i = 0; i < towers.Length; i++)
             {
-                int[] tempArray = towers[i].ToArray();
-                int[] tempOtherArray = other.towers[i].ToArray();
-
-                for (int j = 0; j < tempArray.Length; j++)
+                if (towers[i].Count == other.towers[i].Count)
                 {
-                    if (tempArray[j] != tempOtherArray[j])
+                    int[] tempArray = towers[i].ToArray();
+                    int[] tempOtherArray = other.towers[i].ToArray();
+
+                    for (int j = 0; j < tempArray.Length; j++)
                     {
-                        return false;
+                        if (tempArray[j] != tempOtherArray[j])
+                        {
+                            return false;
+                        }
                     }
                 }
+                else
+                {
+                    return false;
+                }
             }
-            else
-            {
-                return false;
-            }
-        }
 
-        return true;
+            return true;
+        }
+        else
+        {
+            return false;
+        }
     }
 }
 
@@ -71,7 +78,7 @@ public class TowersOfHanoiSolver : MonoBehaviour {
     #region Variables
 
     // The number of discs in the game
-    private const int NUM_OF_DISCS = 6;
+    private int NUM_OF_DISCS = 6;
 
     // Store the string versions of the solution
     private Queue<string> m_solutionMoves = new Queue<string>();
@@ -95,24 +102,26 @@ public class TowersOfHanoiSolver : MonoBehaviour {
         // Get reference to the visual component of the game
         visualBoard = FindObjectOfType<DiscMover>();
         // Initialize the game and it's solution
-        InitGame();
+        //InitGame();
     }
 	
-	void Update ()
-    {
-		if(Input.GetKeyDown(KeyCode.Space))
-        {
-            GameStep();
-        }
-	}
+	//void Update ()
+ //   {
+	//	if(Input.GetKeyDown(KeyCode.Space))
+ //       {
+ //           GameStep();
+ //       }
+	//}
 
     #endregion Monobehaviour
 
     #region Game Control
 
     // Initialize game
-    public void InitGame()
+    public void InitGame(int numOfDiscs)
     {
+        NUM_OF_DISCS = numOfDiscs;
+
         m_tempSolveState.towers = new Stack<int>[3];
         // Use the temp solve state to solve the puzzle and save all the states:
         // Initialize the first tower

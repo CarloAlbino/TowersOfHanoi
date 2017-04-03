@@ -39,32 +39,34 @@ public class DiscMover : MonoBehaviour {
     }
 
     // Used in regular play
-    public void MoveDisc(int disc, ETower target, bool useHint = false)
+    public bool MoveDisc(int disc, ETower target, bool useHint = false)
     {
         if(disc > m_board.GetTopDiscSize(target) && m_board.IsTopDisc(disc))
         {
             // Allowed to move the disc
             MoveDisc(disc, target, m_board.GetTowerSize(target));
             m_board.UpdateBoardState(disc, target, useHint);
+            return true;
         }
         else
         {
             // Not allowed to move the disc
             Debug.LogWarning("Cannot move the disc there.");
+            return false;
         }
     }
 
     // Move disc based off of state
-    public void MoveDisc(BoardState state, bool useHint = false)
+    public bool MoveDisc(BoardState state, bool useHint = false)
     {
         int discToMove = m_board.GetDiscToMove(state);
         ETower target = m_board.FindTowerToMoveTo(state);
 
-        MoveDisc(discToMove, target, useHint);
+        return MoveDisc(discToMove, target, useHint);
     }
 
     // Used in automatic solve
-    public void MoveDisc(int disc, ETower target, int level)
+    public void MoveDisc(int disc, ETower target, int level, bool instantMoves = false)
     {
         //Debug.Log(level);
         Vector3 newPosition;
@@ -73,7 +75,7 @@ public class DiscMover : MonoBehaviour {
         newPosition.x = m_pegs[(int)target].position.x;
         newPosition.y = m_discLevels[level].position.y;
 
-        if (m_instantMoves)
+        if (m_instantMoves || instantMoves)
         {
             m_discs[disc].position = newPosition;
         }
@@ -93,6 +95,7 @@ public class DiscMover : MonoBehaviour {
         }
     }
 
+    // Moves the visual component of the puzzle
     public void MoveTo()
     {
         if(m_isMoving)
@@ -112,6 +115,28 @@ public class DiscMover : MonoBehaviour {
                 m_isMoving = false;
                 m_moveIndex = 0;
             }
+        }
+    }
+
+    // Are there discs moving?
+    public bool IsMoving()
+    {
+        return m_isMoving;
+    }
+
+    public void InitBoard(int numOfDiscs)
+    {
+        for(int i = 0; i < m_discs.Length; i++)
+        {
+            if(i >= numOfDiscs)
+            {
+                m_discs[i].gameObject.SetActive(false);
+            }
+            else
+            {
+                m_discs[i].gameObject.SetActive(true);
+            }
+            MoveDisc(i, ETower.Source, i, true);
         }
     }
 
